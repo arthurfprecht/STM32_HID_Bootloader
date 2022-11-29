@@ -93,7 +93,7 @@
 
 #define USBD_VID     					4617   //1209 hex
 #define USBD_LANGID_STRING     				1033
-#define USBD_MANUFACTURER_STRING			"www.serasidis.gr"
+#define USBD_MANUFACTURER_STRING			"Jiyong Youn"
 #define USBD_PID_FS					48826  //BEBA hex
 #define USBD_PRODUCT_STRING_FS				"STM32 HID bootloader"
 #define USBD_SERIALNUMBER_STRING_FS			"1234567890"
