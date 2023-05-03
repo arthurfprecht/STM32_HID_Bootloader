@@ -1,7 +1,7 @@
 
 /*******************************************************************************
   *
-  * HID bootloader for STM32F407 MCU
+  * HID bootloader for STM32F411 MCU
   *
   ******************************************************************************
   * 
@@ -244,7 +244,7 @@ void SystemClock_Config(void)
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-  /* Initializes the CPU, AHB and APB busses clocks (72 MHz) */
+  /* Initializes the CPU, AHB and APB busses clocks (100 MHz) */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
