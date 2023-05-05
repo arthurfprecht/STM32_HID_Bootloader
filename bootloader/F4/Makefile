@@ -79,7 +79,7 @@ Middlewares/ST/STM32_USB_Device_Library/Class/CustomHID/Src/usbd_customhid.c
 
 # ASM sources
 ASM_SOURCES =  \
-startup_stm32f411ceux.s
+startup_stm32f411xe.s
 
 
 #######################################
@@ -125,7 +125,7 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DUSE_HAL_DRIVER \
--DSTM32F411xx
+-DSTM32F411xE
 
 
 # AS includes
