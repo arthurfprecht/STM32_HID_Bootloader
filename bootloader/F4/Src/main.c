@@ -8,6 +8,7 @@
   *	Created by: Vassilis Serasidis
   *      Originally written for STM32F407
   *      Modified for STM32F411 on Nov 2022 by Jiyong Youn
+  *      Modified for WeAct Blackpill on Aug 2024 by Arthur Precht 
   *       Date: 28 June 2018
   *       Home: http://www.serasidis.gr
   *      email: avrsite@yahoo.gr, info@serasidis.gr
@@ -81,7 +82,7 @@ static uint8_t CMD_SIGNATURE[7] = {'B','T','L','D','C','M','D'};
 
 /* Command: <Send next data pack> */
 static uint8_t CMD_DATA_RECEIVED[8] = {'B','T','L','D','C','M','D',2};
-uint8_t new_data_is_received = 0;
+volatile uint8_t new_data_is_received = 0;
 static uint8_t pageData[SECTOR_SIZE];
 typedef void (*funct_ptr)(void);
 
@@ -132,14 +133,15 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
   MX_GPIO_Init();
-   
+
   HAL_Delay(100);
-  
+
   magic_val = LL_RTC_BAK_GetRegister(RTC, HID_MAGIC_NUMBER_BKP_INDEX);
-  
+
   /* In case of incoming magic number or <BOOT_1_PIN> is LOW,
     jump to HID bootloader */
   if ((magic_val != 0x424C)&&(HAL_GPIO_ReadPin(BOOT_1_PORT, BOOT_1_PIN) != BOOT_1_ENABLED)) {
+    HAL_GPIO_WritePin(LED_1_PORT, LED_1_PIN, GPIO_PIN_SET);
     typedef void (*pFunction)(void);
     pFunction Jump_To_Application;
     uint32_t JumpAddress;
@@ -147,33 +149,33 @@ int main(void)
     JumpAddress = *(__IO uint32_t*) (FLASH_BASE + USER_CODE_OFFSET + 4);
     Jump_To_Application = (pFunction) JumpAddress;
     __set_MSP(*(uint32_t *) (FLASH_BASE + USER_CODE_OFFSET));
-    Jump_To_Application(); 
+    Jump_To_Application();
   }
-  
+
   /* Reset the magic number backup memory */
-  
+
   /* Enable Power Clock */
   __HAL_RCC_PWR_CLK_ENABLE();
-  
+
   /* Allow access to Backup domain */
   LL_PWR_EnableBkUpAccess();
-  
+
   LL_RTC_BAK_SetRegister(RTC, HID_MAGIC_NUMBER_BKP_INDEX, 0);
-  
+
   /* Forbid access to Backup domain */
   LL_PWR_DisableBkUpAccess();
-  
+
   /* USER CODE END SysInit */
-  
+
   /* Initialize all configured peripherals */
-  
+
   MX_USB_DEVICE_Init();
 
   /* USER CODE BEGIN 2 */
-                                               
+
   static volatile uint32_t current_Page = (USER_CODE_OFFSET / 1024);
   static volatile uint16_t currentPageOffset = 0;
-                                                           
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -250,10 +252,11 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 6;
-  RCC_OscInitStruct.PLL.PLLN = 192;
+  RCC_OscInitStruct.PLL.PLLM = 15;
+  RCC_OscInitStruct.PLL.PLLN = 144;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV4;
-  RCC_OscInitStruct.PLL.PLLQ = 8;
+  RCC_OscInitStruct.PLL.PLLQ = 5;
+
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -264,9 +267,9 @@ void SystemClock_Config(void)
   RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK) {
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK) {
     _Error_Handler(__FILE__, __LINE__);
   }
 
@@ -292,12 +295,9 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct;
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOE_CLK_ENABLE();
 
   /* Configure GPIO pin Output Level */
 
@@ -307,17 +307,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
- 
-                               
-                                  
-                                        
-                                    
-                                              
 
   /* Configure GPIO pin : PB2 */
   GPIO_InitStruct.Pin = BOOT_1_PIN;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(BOOT_1_PORT, &GPIO_InitStruct);
 
   /* Configure GPIO pin : PE0 */
@@ -336,13 +330,6 @@ void write_flash_sector(uint32_t currentPage) {
   HAL_GPIO_WritePin(LED_1_PORT, LED_1_PIN, GPIO_PIN_SET);	
   FLASH_EraseInitTypeDef EraseInit;
   HAL_FLASH_Unlock();
-  
-                                                                   
-                                                  
-                                                  
-                                
-                                                
-                                                 
 
   /* Sector to the erase the flash memory (16, 32, 48 ... kbytes) */
   if ((currentPage == 16) || (currentPage == 32) ||
@@ -351,10 +338,9 @@ void write_flash_sector(uint32_t currentPage) {
     EraseInit.TypeErase = FLASH_TYPEERASE_SECTORS;
     EraseInit.VoltageRange  = FLASH_VOLTAGE_RANGE_3;
 
+    EraseInit.Banks = FLASH_BANK_1;
     /* Specify sector number. Starts from 0x08004000 */
     EraseInit.Sector = erase_page++;
-                                              
-  
 
     /* This is also important! */
     EraseInit.NbSectors = 1;

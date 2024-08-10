@@ -7,6 +7,7 @@
   *      Created by: Vassilis Serasidis
   *      Originally written for STM32F407
   *      Modified for STM32F411 on Nov 2022 by Jiyong Youn
+  *		  Modified for WeAcct Black pill on Aug 2024 by Arthur Precht
   *       Date: 28 June 2018
   *       Home: http://www.serasidis.gr
   *      email: avrsite@yahoo.gr, info@serasidis.gr
@@ -96,8 +97,8 @@
 #define HID_MAGIC_NUMBER_BKP_VALUE 0x424C
                              
        
-#define BOOT_1_PIN      GPIO_PIN_2
-#define BOOT_1_PORT     GPIOB
+#define BOOT_1_PIN      GPIO_PIN_0 //This is not the true BOOT1 pin of the IC, it is some button we can push to force the bootloader
+#define BOOT_1_PORT     GPIOA //In the case of the black pill, user button is PA0
 #define BOOT_1_ENABLED  GPIO_PIN_RESET // Active if this pin goes to 3.3V (Logic HIGH)
 #define LED_1_PIN       GPIO_PIN_13 
 #define LED_1_PORT      GPIOC

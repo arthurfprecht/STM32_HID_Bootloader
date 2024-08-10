@@ -33,8 +33,10 @@ TARGET = hid_bootloader
 # debug build?
 DEBUG = 1
 # optimization
-OPT = -Os
+#OPT = -Og #Good for debugging but generates a too big binary for first pages (16.8 kb instead of 16)
+OPT = -Os #To be able to use the bootloader with Arduino later, this is the correct size (14.7 kb)
 
+GCC_PATH = C:\Intel\Sloeber\arduinoPlugin\packages\STMicroelectronics\tools\xpack-arm-none-eabi-gcc\12.2.1-1.2\bin
 
 #######################################
 # paths
@@ -79,8 +81,8 @@ Middlewares/ST/STM32_USB_Device_Library/Class/CustomHID/Src/usbd_customhid.c
 
 # ASM sources
 ASM_SOURCES =  \
-startup_stm32f411xe.s
-
+startup_stm32f401xe.s
+#startup_stm32f411xe.s
 
 #######################################
 # binaries
@@ -125,8 +127,8 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DUSE_HAL_DRIVER \
--DSTM32F411xE
-
+-DSTM32F401xE
+#-DSTM32F411xE
 
 # AS includes
 AS_INCLUDES = 
@@ -160,12 +162,13 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32F411CEUx_FLASH.ld
+LDSCRIPT = STM32F401CEUx_FLASH.ld
+#LDSCRIPT = STM32F411CEUx_FLASH.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 
 LIBDIR = 
-LDFLAGS = $(MCU) -specs=nano.specs -specs=nosys.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--no-wchar-size-warning -Wl,--gc-sections
+LDFLAGS = $(MCU) -specs=nano.specs -specs=nosys.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--no-warn-rwx-segment -Wl,--no-wchar-size-warning -Wl,--gc-sections
 
 # default action: build all
 all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
@@ -210,7 +213,7 @@ $(BUILD_DIR):
 #######################################
 clean:
 	$(ECHO) "CLEAN"
-	-$(Q)rm -fR $(BUILD_DIR)
+	-$(Q)del /F /Q $(BUILD_DIR)
 
 #######################################
 # dependencies
