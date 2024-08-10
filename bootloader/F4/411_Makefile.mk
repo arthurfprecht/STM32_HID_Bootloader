@@ -34,7 +34,7 @@ TARGET = hid_bootloader
 DEBUG = 1
 # optimization
 #OPT = -Og #Good for debugging but generates a too big binary for first pages (16.8 kb instead of 16)
-OPT = -Os #To be able to use the bootloader with Arduino later, this is the correct size (14.7 kb)
+OPT = -Os #Apparently doesnt work with Arduino later, this is the correct size (14.7 kb)
 
 GCC_PATH = C:\Intel\Sloeber\arduinoPlugin\packages\STMicroelectronics\tools\xpack-arm-none-eabi-gcc\12.2.1-1.2\bin
 
@@ -42,7 +42,7 @@ GCC_PATH = C:\Intel\Sloeber\arduinoPlugin\packages\STMicroelectronics\tools\xpac
 # paths
 #######################################
 # Build path
-BUILD_DIR = build
+BUILD_DIR = build_411
 
 ######################################
 # source
@@ -81,8 +81,8 @@ Middlewares/ST/STM32_USB_Device_Library/Class/CustomHID/Src/usbd_customhid.c
 
 # ASM sources
 ASM_SOURCES =  \
-startup_stm32f401xe.s
-#startup_stm32f411xe.s
+startup_stm32f411xe.s
+
 
 #######################################
 # binaries
@@ -127,8 +127,7 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DUSE_HAL_DRIVER \
--DSTM32F401xE
-#-DSTM32F411xE
+-DSTM32F411xE
 
 # AS includes
 AS_INCLUDES = 
@@ -162,8 +161,7 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 # LDFLAGS
 #######################################
 # link script
-LDSCRIPT = STM32F401CEUx_FLASH.ld
-#LDSCRIPT = STM32F411CEUx_FLASH.ld
+LDSCRIPT = STM32F411CEUx_FLASH.ld
 
 # libraries
 LIBS = -lc -lm -lnosys 
@@ -184,15 +182,15 @@ vpath %.c $(sort $(dir $(C_SOURCES)))
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
 
-$(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
+$(BUILD_DIR)/%.o: %.c 411_Makefile.mk | $(BUILD_DIR) 
 	$(ECHO) "CC      $<"
 	$(Q)$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
-$(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: %.s 411_Makefile.mk | $(BUILD_DIR)
 	$(ECHO) "AS      $<"
 	$(Q)$(AS) -c $(CFLAGS) $< -o $@
 
-$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
+$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) 411_Makefile.mk
 	$(ECHO) "LD      $<"
 	$(Q)$(CC) $(OBJECTS) $(LDFLAGS) -o $@
 	$(Q)$(SZ) $@
